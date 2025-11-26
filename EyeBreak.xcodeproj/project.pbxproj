@@ -29,9 +29,30 @@
 		35634FA12ED78283000520BF /* EyeBreakUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EyeBreakUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		35634FBE2ED78AB8000520BF /* Exceptions for "EyeBreak" folder in "EyeBreak" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				TestsTimerManagerTests.swift,
+			);
+			target = 35634F872ED78280000520BF /* EyeBreak */;
+		};
+		35634FC02ED78AC2000520BF /* Exceptions for "EyeBreak" folder in "EyeBreakTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				TestsTimerManagerTests.swift,
+			);
+			target = 35634F962ED78283000520BF /* EyeBreakTests */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		35634F8A2ED78280000520BF /* EyeBreak */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				35634FBE2ED78AB8000520BF /* Exceptions for "EyeBreak" folder in "EyeBreak" target */,
+				35634FC02ED78AC2000520BF /* Exceptions for "EyeBreak" folder in "EyeBreakTests" target */,
+			);
 			path = EyeBreak;
 			sourceTree = "<group>";
 		};
@@ -403,6 +424,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -435,6 +457,7 @@
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SELECTED_FILES = readonly;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -461,6 +484,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = K2VZ3Q24J7;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSUIElement = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = me.EyeBreakTests;
@@ -482,6 +506,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = K2VZ3Q24J7;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSUIElement = YES;
 				MACOSX_DEPLOYMENT_TARGET = 26.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = me.EyeBreakTests;
