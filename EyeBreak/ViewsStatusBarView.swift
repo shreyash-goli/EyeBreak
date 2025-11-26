@@ -10,6 +10,7 @@ import SwiftUI
 /// Menu bar dropdown content view
 struct StatusBarView: View {
     @ObservedObject var timerManager: TimerManager
+    @ObservedObject var windowManager: WindowManager
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -46,6 +47,21 @@ struct StatusBarView: View {
                         .fontWeight(.semibold)
                 }
             }
+            
+            Divider()
+            
+            // Test Break Button (Phase 2)
+            Button(action: {
+                windowManager.show(allowDismissal: true)
+            }) {
+                HStack {
+                    Image(systemName: "sparkles")
+                    Text("Test Break Overlay")
+                }
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+            .help("Manually trigger the break overlay window (dismissible with ESC)")
             
             Divider()
             
@@ -90,7 +106,7 @@ struct StatusBarView: View {
             .keyboardShortcut("q", modifiers: [.command])
         }
         .padding()
-        .frame(width: 240)
+        .frame(width: 260)
     }
     
     // MARK: - Computed Properties
@@ -119,5 +135,8 @@ struct StatusBarView: View {
 }
 
 #Preview {
-    StatusBarView(timerManager: TimerManager(debugMode: true))
+    StatusBarView(
+        timerManager: TimerManager(debugMode: true),
+        windowManager: WindowManager()
+    )
 }

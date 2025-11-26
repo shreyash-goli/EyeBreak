@@ -8,7 +8,7 @@
 import Foundation
 
 /// Represents the current state of the break cycle
-enum BreakState: Equatable {
+enum BreakState: Equatable, Sendable {
     case running
     case onBreak
     case paused

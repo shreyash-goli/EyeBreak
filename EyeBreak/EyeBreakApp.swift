@@ -25,13 +25,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem?
     private var popover: NSPopover?
     private var timerManager: TimerManager?
+    private var windowManager: WindowManager?
     
     func applicationDidFinishLaunching(_ notification: Notification) {
         print("🚀 App launching...")
         
-        // Initialize the timer manager
+        // Initialize managers
         timerManager = TimerManager(debugMode: false)
-        print("✅ Timer manager initialized")
+        windowManager = WindowManager()
+        print("✅ Managers initialized")
+        
         timerManager?.start()
         
         // Create the status bar item
@@ -60,13 +63,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         // Create the popover
         popover = NSPopover()
-        popover?.contentSize = NSSize(width: 240, height: 300)
+        popover?.contentSize = NSSize(width: 260, height: 380)
         popover?.behavior = .transient
         print("✅ Popover created")
         
-        if let timerManager = timerManager {
+        if let timerManager = timerManager, let windowManager = windowManager {
             popover?.contentViewController = NSHostingController(
-                rootView: StatusBarView(timerManager: timerManager)
+                rootView: StatusBarView(
+                    timerManager: timerManager,
+                    windowManager: windowManager
+                )
             )
             print("✅ Popover content view configured")
         }
