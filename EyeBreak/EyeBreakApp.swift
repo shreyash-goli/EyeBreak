@@ -26,46 +26,51 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var popover: NSPopover?
     private var timerManager: TimerManager?
     private var windowManager: WindowManager?
+    private var notificationManager: NotificationManager?
     
     func applicationDidFinishLaunching(_ notification: Notification) {
-        print("🚀 App launching...")
+        Swift.print("🚀 App launching...")
         
         // Initialize managers
         timerManager = TimerManager(debugMode: false)
         windowManager = WindowManager()
-        print("✅ Managers initialized")
+        notificationManager = NotificationManager()
+        Swift.print("✅ Managers initialized")
+        
+        // Connect timer callbacks to window manager
+        setupTimerCallbacks()
         
         timerManager?.start()
         
         // Create the status bar item
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        print("✅ Status item created: \(statusItem != nil)")
+        Swift.print("✅ Status item created: \(statusItem != nil)")
         
         if let button = statusItem?.button {
-            print("✅ Status bar button obtained")
+            Swift.print("✅ Status bar button obtained")
             
             // Use SF Symbol for eye icon, with fallback to text
             if let image = NSImage(systemSymbolName: "eye.fill", accessibilityDescription: "Glance") {
                 button.image = image
-                print("✅ SF Symbol image set")
+                Swift.print("✅ SF Symbol image set")
             } else {
                 // Fallback: use text if SF Symbol fails
                 button.title = "👁️"
-                print("⚠️ Using emoji fallback (SF Symbol not available)")
+                Swift.print("⚠️ Using emoji fallback (SF Symbol not available)")
             }
             
             button.action = #selector(togglePopover)
             button.target = self
-            print("✅ Button configured with image and action")
+            Swift.print("✅ Button configured with image and action")
         } else {
-            print("❌ ERROR: Could not get status bar button!")
+            Swift.print("❌ ERROR: Could not get status bar button!")
         }
         
         // Create the popover
         popover = NSPopover()
-        popover?.contentSize = NSSize(width: 260, height: 380)
+        popover?.contentSize = NSSize(width: 260, height: 450)
         popover?.behavior = .transient
-        print("✅ Popover created")
+        Swift.print("✅ Popover created")
         
         if let timerManager = timerManager, let windowManager = windowManager {
             popover?.contentViewController = NSHostingController(
@@ -74,14 +79,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     windowManager: windowManager
                 )
             )
-            print("✅ Popover content view configured")
+            Swift.print("✅ Popover content view configured")
         }
         
         // Start the timer
         timerManager?.start()
         
-        print("🎯 Glance app launched successfully!")
-        print("📍 Check your menu bar on the RIGHT side for the eye icon")
+        Swift.print("🎯 Glance app launched successfully!")
+        Swift.print("📍 Check your menu bar on the RIGHT side for the eye icon")
     }
     
     @objc func togglePopover() {
@@ -92,6 +97,42 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 popover.performClose(nil)
             } else {
                 popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+            }
+        }
+    }
+    
+    // MARK: - Timer Callbacks
+    
+    private func setupTimerCallbacks() {
+        // When timer completes, show overlay (no ESC dismissal)
+        timerManager?.onBreakStarted = { [weak self] in
+            Task { @MainActor [weak self] in
+                Swift.print("🚨 Break started - showing overlay")
+                self?.windowManager?.show(allowDismissal: false)
+            }
+        }
+        
+        // When break ends, hide overlay and reset timer
+        timerManager?.onBreakEnded = { [weak self] in
+            Task { @MainActor [weak self] in
+                Swift.print("✅ Break ended - hiding overlay")
+                self?.windowManager?.hide()
+            }
+        }
+        
+        // Send notification 30 seconds before break
+        timerManager?.onBreakWarning = { [weak self] in
+            Task { @MainActor [weak self] in
+                Swift.print("⚠️ Sending break warning notification")
+                self?.notificationManager?.sendBreakWarning()
+            }
+        }
+        
+        // When break overlay completes (after 20 seconds), tell timer
+        windowManager?.onBreakCompleted = { [weak self] in
+            Task { @MainActor [weak self] in
+                Swift.print("✅ Break overlay completed - resetting timer")
+                self?.timerManager?.breakCompleted()
             }
         }
     }

@@ -18,6 +18,9 @@ final class WindowManager: ObservableObject {
     private var overlayWindow: NSWindow?
     @Published private(set) var isShowing = false
     
+    /// Callback when break completes (for timer reset)
+    var onBreakCompleted: (() -> Void)?
+    
     // MARK: - Public Methods
     
     /// Shows the break overlay window covering all screens
@@ -48,8 +51,11 @@ final class WindowManager: ObservableObject {
         
         // Create the SwiftUI content view
         let contentView = BreakOverlay(allowDismissal: allowDismissal) {
-            Task { @MainActor in
-                self.hide()
+            Task { @MainActor [weak self] in
+                // Call break completed callback
+                self?.onBreakCompleted?()
+                // Then hide the window
+                self?.hide()
             }
         }
         

@@ -78,7 +78,12 @@ struct StatusBarView: View {
             
             // Control Buttons
             HStack(spacing: 8) {
-                if timerManager.state == .running {
+                if timerManager.isPausedForHour {
+                    Button("Resume Now") {
+                        timerManager.resumeFromPause()
+                    }
+                    .keyboardShortcut("s", modifiers: [.command])
+                } else if timerManager.state == .running {
                     Button("Pause") {
                         timerManager.pause()
                     }
@@ -98,6 +103,43 @@ struct StatusBarView: View {
             .buttonStyle(.bordered)
             
             Divider()
+            
+            // Pause for 1 Hour Button
+            if !timerManager.isPausedForHour {
+                Button(action: {
+                    timerManager.pauseForOneHour()
+                }) {
+                    HStack {
+                        Image(systemName: "pause.circle")
+                        Text("Pause for 1 Hour")
+                    }
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.large)
+                .help("Pauses all breaks for 1 hour")
+                
+                Divider()
+            } else {
+                // Show pause status
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Image(systemName: "pause.circle.fill")
+                            .foregroundStyle(.orange)
+                        Text("Paused for 1 hour")
+                            .fontWeight(.semibold)
+                            .foregroundStyle(.orange)
+                    }
+                    
+                    if let endTime = timerManager.pauseEndTime {
+                        Text("Resumes at \(endTime, style: .time)")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+                .padding(.vertical, 4)
+                
+                Divider()
+            }
             
             // Quit Button
             Button("Quit Glance") {
