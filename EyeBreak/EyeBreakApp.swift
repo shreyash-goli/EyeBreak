@@ -28,6 +28,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     private var windowManager: WindowManager?
     private var notificationManager: NotificationManager?
     
+    // MARK: - Deinitialization
+    
+    deinit {
+        Swift.print("🗑️ AppDelegate deinit - cleaning up all managers")
+        cleanup()
+    }
+    
+    // MARK: - App Lifecycle
+    
     func applicationDidFinishLaunching(_ notification: Notification) {
         Swift.print("🚀 App launching...")
         
@@ -89,6 +98,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         Swift.print("📍 Check your menu bar on the RIGHT side for the eye icon")
     }
     
+    func applicationWillTerminate(_ notification: Notification) {
+        Swift.print("👋 App terminating - cleaning up")
+        cleanup()
+    }
+    
     @objc func togglePopover() {
         guard let button = statusItem?.button else { return }
         
@@ -113,10 +127,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         
         // When break ends, hide overlay and reset timer
-        timerManager?.onBreakEnded = { [weak self] in
-            Task { @MainActor [weak self] in
-                Swift.print("✅ Break ended - hiding overlay")
-                self?.windowManager?.hide()
+        timerManager?.onBreakEnded = {
+            Task { @MainActor in
+                Swift.print("✅ Break ended callback (no action needed - window already hidden)")
             }
         }
         
@@ -135,5 +148,33 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.timerManager?.breakCompleted()
             }
         }
+    }
+    
+    // MARK: - Cleanup
+    
+    private func cleanup() {
+        Swift.print("🧹 AppDelegate cleanup started")
+        
+        timerManager?.stop()
+        timerManager = nil
+        
+        // Call cleanup instead of hide for proper termination
+        windowManager?.cleanup()
+        windowManager = nil
+        
+        notificationManager = nil
+        
+        if let popover = popover {
+            popover.performClose(nil)
+            popover.contentViewController = nil
+            self.popover = nil
+        }
+        
+        if let statusItem = statusItem {
+            NSStatusBar.system.removeStatusItem(statusItem)
+            self.statusItem = nil
+        }
+        
+        Swift.print("🧹 AppDelegate cleanup completed")
     }
 }

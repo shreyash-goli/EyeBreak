@@ -47,6 +47,12 @@ struct VisualEffectView: NSViewRepresentable {
         nsView.blendingMode = blendingMode
         nsView.isEmphasized = isEmphasized
     }
+    
+    // CRITICAL: Cleanup when view is removed to prevent memory leaks
+    static func dismantleNSView(_ nsView: NSVisualEffectView, coordinator: ()) {
+        Swift.print("🧹 VisualEffectView being dismantled")
+        nsView.removeFromSuperview()
+    }
 }
 
 #Preview {

@@ -203,9 +203,10 @@ final class TimerManagerTests: XCTestCase {
 
 // MARK: - BreakState Tests
 
+@MainActor
 final class BreakStateTests: XCTestCase {
     
-    func testBreakStateEquality() {
+    func testBreakStateEquality() async throws {
         XCTAssertEqual(BreakState.running, BreakState.running)
         XCTAssertEqual(BreakState.onBreak, BreakState.onBreak)
         XCTAssertEqual(BreakState.paused, BreakState.paused)

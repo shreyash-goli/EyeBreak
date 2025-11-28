@@ -13,7 +13,7 @@ import Combine
 final class TimerManager: ObservableObject {
     // MARK: - Published Properties
     
-    @Published private(set) var state: BreakState = .running
+    @Published private(set) var state: BreakState = .running  // Start in running state
     @Published private(set) var timeRemaining: TimeInterval = 0
     @Published private(set) var isPaused: Bool = false
     @Published private(set) var pauseEndTime: Date?
@@ -24,7 +24,16 @@ final class TimerManager: ObservableObject {
     var debugMode: Bool = false {
         didSet {
             if debugMode != oldValue {
-                resetTimer()
+                // Make synchronous for tests - stop, reset, restart immediately
+                stopTimer()
+                state = .running
+                timeRemaining = currentWorkDuration
+                hasWarningFired = false
+                
+                // Restart if not paused for hour
+                if !isPausedForHour {
+                    startTimer()
+                }
             }
         }
     }
@@ -74,19 +83,30 @@ final class TimerManager: ObservableObject {
     init(debugMode: Bool = false) {
         self.debugMode = debugMode
         self.timeRemaining = currentWorkDuration
+        self.state = .running  // Tests expect running state on init
+    }
+    
+    // MARK: - Deinitialization
+    
+    deinit {
+        Swift.print("🗑️ TimerManager deinit - cleaning up timer")
+        timer?.invalidate()
+        timer = nil
     }
     
     // MARK: - Public Methods
     
     /// Starts or resumes the timer
     func start() {
+        Swift.print("▶️ start() called - current state: \(state), timeRemaining: \(timeRemaining)")
+        
         // Check if paused for an hour
         if isPausedForHour {
             Swift.print("⏸️ App is paused for 1 hour, not starting timer")
             return
         }
         
-        guard state != .running else { return }
+        // REMOVED the guard that was blocking restart!
         
         state = .running
         isPaused = false
@@ -94,10 +114,12 @@ final class TimerManager: ObservableObject {
         
         // If timeRemaining is 0, reset it
         if timeRemaining <= 0 {
+            Swift.print("⚠️ timeRemaining was 0, resetting to \(currentWorkDuration)")
             timeRemaining = currentWorkDuration
         }
         
         startTimer()
+        Swift.print("✅ Timer started - state: \(state), timeRemaining: \(timeRemaining)")
     }
     
     /// Pauses the timer
@@ -125,8 +147,9 @@ final class TimerManager: ObservableObject {
     
     /// Resets the timer to the initial work duration
     func resetTimer() {
+        Swift.print("🔄 resetTimer() called externally")
         stopTimer()
-        state = .running
+        state = .running  // Tests expect running state after reset
         timeRemaining = currentWorkDuration
         hasWarningFired = false
         startTimer()
@@ -153,7 +176,14 @@ final class TimerManager: ObservableObject {
     // MARK: - Private Methods
     
     private func startTimer() {
-        stopTimer() // Ensure no duplicate timers
+        Swift.print("🔧 startTimer() called")
+        
+        // CRITICAL: Invalidate ANY existing timer first
+        if let existingTimer = timer {
+            Swift.print("⚠️ Found existing timer, invalidating it first")
+            existingTimer.invalidate()
+        }
+        timer = nil
         
         // Check if paused for an hour
         if isPausedForHour {
@@ -162,6 +192,7 @@ final class TimerManager: ObservableObject {
             return
         }
         
+        Swift.print("⏲️ Creating NEW Timer with 1.0 second interval...")
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.tick()
@@ -171,16 +202,27 @@ final class TimerManager: ObservableObject {
         // Ensure timer runs even when menu is open
         if let timer = timer {
             RunLoop.current.add(timer, forMode: .common)
+            Swift.print("✅ Timer scheduled and added to RunLoop.common")
+        } else {
+            Swift.print("❌ ERROR: Timer is nil after creation!")
         }
     }
     
     private func stopTimer() {
+        Swift.print("🛑 stopTimer() called")
         timer?.invalidate()
         timer = nil
     }
     
     private func tick() {
-        guard state == .running else { return }
+        // Log every 30 seconds instead of every second to avoid console flood
+        if Int(timeRemaining) % 30 == 0 {
+            Swift.print("⏱️ tick() - state: \(state), timeRemaining: \(timeRemaining)")
+        }
+        
+        guard state == .running else {
+            return 
+        }
         
         // Check if pause period ended
         if isPausedForHour, let endTime = pauseEndTime, Date() >= endTime {
