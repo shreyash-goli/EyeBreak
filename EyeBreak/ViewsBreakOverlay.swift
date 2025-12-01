@@ -8,7 +8,53 @@
 import SwiftUI
 import Combine
 
-/// Fullscreen break overlay - uses class-based countdown manager for proper memory management
+/// Manages the countdown logic
+@MainActor
+class CountdownManager: ObservableObject {
+    @Published var timeRemaining: Int = 20
+    private var timer: Timer?
+    private var onComplete: (() -> Void)?
+    
+    func start(duration: Int = 20, onComplete: @escaping () -> Void) {
+        self.timeRemaining = duration
+        self.onComplete = onComplete
+        
+        stop() // Invalidate existing timer if any
+        
+        Swift.print("⏱️ CountdownManager: Starting countdown from \(duration)")
+        
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.tick()
+            }
+        }
+    }
+    
+    func stop() {
+        Swift.print("🛑 CountdownManager: Stopping countdown")
+        timer?.invalidate()
+        timer = nil
+    }
+    
+    private func tick() {
+        if timeRemaining > 0 {
+            timeRemaining -= 1
+            if timeRemaining % 5 == 0 {
+                Swift.print("⏱️ CountdownManager: \(timeRemaining) seconds remaining")
+            }
+        } else {
+            Swift.print("✅ CountdownManager: Countdown complete")
+            stop()
+            onComplete?()
+        }
+    }
+    
+    deinit {
+        timer?.invalidate()
+    }
+}
+
+/// Fullscreen break overlay with countdown timer
 struct BreakOverlay: View {
     
     var allowDismissal: Bool = false
@@ -18,14 +64,14 @@ struct BreakOverlay: View {
     
     var body: some View {
         ZStack {
-            // Simple solid background - NO gradients (gradients are GPU-intensive)
+            // Simple solid background
             Color.black.opacity(0.90)
                 .ignoresSafeArea()
             
             VStack(spacing: 30) {
                 Spacer()
                 
-                // Eye icon - NO animation (animations constantly allocate memory)
+                // Eye icon
                 Image(systemName: "eye.fill")
                     .font(.system(size: 100))
                     .foregroundStyle(.white)
@@ -59,67 +105,19 @@ struct BreakOverlay: View {
                 }
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity) // Ensure it fills the window
         .onAppear {
-            countdownManager.start { @MainActor in
+            Swift.print("👀 BreakOverlay onAppear called")
+            // Always restart countdown on appear
+            countdownManager.start(duration: 20) {
+                Swift.print("👋 BreakOverlay onDismiss closure called")
                 onDismiss()
             }
         }
         .onDisappear {
+            Swift.print("👋 BreakOverlay onDisappear called")
             countdownManager.stop()
         }
-    }
-}
-
-/// Manages the countdown timer separately from the view to prevent use-after-free crashes
-@MainActor
-final class CountdownManager: ObservableObject {
-    @Published var timeRemaining: Int = 20
-    
-    private var timer: Timer?
-    private var onComplete: (@MainActor () -> Void)?
-    
-    func start(onComplete: @escaping @MainActor () -> Void) {
-        // Stop any existing timer first
-        stop()
-        
-        self.onComplete = onComplete
-        timeRemaining = 20
-        
-        // CRITICAL: Use [weak self] to prevent retain cycle
-        // Timer runs on main RunLoop, so we dispatch to MainActor
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            Task { @MainActor [weak self] in
-                guard let self = self else { return }
-                
-                if self.timeRemaining > 0 {
-                    self.timeRemaining -= 1
-                } else {
-                    self.complete()
-                }
-            }
-        }
-    }
-    
-    func stop() {
-        timer?.invalidate()
-        timer = nil
-        onComplete = nil
-    }
-    
-    private func complete() {
-        // Store callback before stopping
-        let callback = onComplete
-        
-        // Stop timer first to prevent any further ticks
-        stop()
-        
-        // Call callback after cleanup
-        callback?()
-    }
-    
-    nonisolated deinit {
-        // Can't call @MainActor methods from deinit
-        // Timer will be invalidated when deallocated
     }
 }
 

@@ -176,11 +176,8 @@ final class TimerManager: ObservableObject {
     // MARK: - Private Methods
     
     private func startTimer() {
-        Swift.print("🔧 startTimer() called")
-        
         // CRITICAL: Invalidate ANY existing timer first
         if let existingTimer = timer {
-            Swift.print("⚠️ Found existing timer, invalidating it first")
             existingTimer.invalidate()
         }
         timer = nil
@@ -192,7 +189,6 @@ final class TimerManager: ObservableObject {
             return
         }
         
-        Swift.print("⏲️ Creating NEW Timer with 1.0 second interval...")
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
                 self?.tick()
@@ -202,14 +198,10 @@ final class TimerManager: ObservableObject {
         // Ensure timer runs even when menu is open
         if let timer = timer {
             RunLoop.current.add(timer, forMode: .common)
-            Swift.print("✅ Timer scheduled and added to RunLoop.common")
-        } else {
-            Swift.print("❌ ERROR: Timer is nil after creation!")
         }
     }
     
     private func stopTimer() {
-        Swift.print("🛑 stopTimer() called")
         timer?.invalidate()
         timer = nil
     }
