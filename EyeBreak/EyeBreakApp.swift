@@ -9,7 +9,7 @@ import SwiftUI
 import AppKit
 
 @main
-struct GlanceApp: App {
+struct EyeBreakApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
     var body: some Scene {
@@ -59,7 +59,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             Swift.print("✅ Status bar button obtained")
             
             // Use SF Symbol for eye icon, with fallback to text
-            if let image = NSImage(systemSymbolName: "eye.fill", accessibilityDescription: "Glance") {
+            if let image = NSImage(systemSymbolName: "eye.fill", accessibilityDescription: "EyeBreak") {
                 button.image = image
                 Swift.print("✅ SF Symbol image set")
             } else {
@@ -94,7 +94,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Start the timer
         timerManager?.start()
         
-        Swift.print("🎯 Glance app launched successfully!")
+        Swift.print("🎯 EyeBreak app launched successfully!")
         Swift.print("📍 Check your menu bar on the RIGHT side for the eye icon")
     }
     
