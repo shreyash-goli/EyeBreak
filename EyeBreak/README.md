@@ -52,6 +52,7 @@ A macOS menu bar app that helps prevent eye strain by reminding you to take regu
 - **AppKit** - macOS menu bar integration
 - **UserNotifications** - Break warning notifications
 - **Swift Concurrency** - Async/await for smooth operation
+
 ---
 
 **Note**: Remember to take regular breaks from your screen! Your eyes will thank you. 👁️✨
